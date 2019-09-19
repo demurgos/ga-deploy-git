@@ -23,7 +23,7 @@ interface Inputs {
 function getInputs(): Inputs {
   const accessToken: string = core.getInput("accessToken", {required: true});
   const srcBranch: string | undefined = core.getInput("srcBranch", {required: false});
-  const srcDir: string | undefined = core.getInput("srcBranch", {required: false});
+  const srcDir: string | undefined = core.getInput("srcDir", {required: false});
   const destBranch: string = core.getInput("destBranch", {required: true});
   return {accessToken, srcBranch, srcDir, destBranch};
 }

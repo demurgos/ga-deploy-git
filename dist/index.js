@@ -2426,7 +2426,7 @@ async function main() {
 function getInputs() {
     const accessToken = core.getInput("accessToken", { required: true });
     const srcBranch = core.getInput("srcBranch", { required: false });
-    const srcDir = core.getInput("srcBranch", { required: false });
+    const srcDir = core.getInput("srcDir", { required: false });
     const destBranch = core.getInput("destBranch", { required: true });
     return { accessToken, srcBranch, srcDir, destBranch };
 }
