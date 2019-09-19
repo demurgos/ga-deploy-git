@@ -76,11 +76,11 @@ async function withTmpDir<T>(fn: (dirPath: string) => Promise<T>): Promise<T> {
 
 function createTmpDirSync(): string {
   const MAX_TRIES: number = 5;
-  const tmpRoot: string = os.tmpdir();
+  const tmpRoot: string = os.homedir(); // os.tmpdir();
   let tryCount: number = 0;
   while (tryCount < MAX_TRIES) {
     tryCount++;
-    const name: string = crypto.randomBytes(8).toString("hex");
+    const name: string = `.tmp-${crypto.randomBytes(8).toString("hex")}`;
     const tmpDir: string = sysPath.join(tmpRoot, name);
     try {
       fs.mkdirSync(tmpDir);

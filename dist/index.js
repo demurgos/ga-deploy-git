@@ -2470,11 +2470,11 @@ async function withTmpDir(fn) {
 }
 function createTmpDirSync() {
     const MAX_TRIES = 5;
-    const tmpRoot = os.tmpdir();
+    const tmpRoot = os.homedir(); // os.tmpdir();
     let tryCount = 0;
     while (tryCount < MAX_TRIES) {
         tryCount++;
-        const name = crypto.randomBytes(8).toString("hex");
+        const name = `.tmp-${crypto.randomBytes(8).toString("hex")}`;
         const tmpDir = sysPath.join(tmpRoot, name);
         try {
             fs.mkdirSync(tmpDir);
