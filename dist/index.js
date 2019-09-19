@@ -2453,8 +2453,8 @@ async function deploy(inputs) {
     const destRepoUri = `https://${inputs.accessToken}@github.com/${destRepoSlug}.git`;
     return withTmpDir(async (cwd) => {
         await exec.exec("git", ["init"], { cwd });
-        // await exec.exec("git", ["config", "--global", "user.name", "foo"], {cwd});
-        // await exec.exec("git", ["config", "--global", "user.email", "foo@example.com"], {cwd});
+        await exec.exec("git", ["config", "--local", "user.name", "foo"], { cwd });
+        await exec.exec("git", ["config", "--local", "user.email", "foo@example.com"], { cwd });
         await exec.exec("git", ["remote", "add", "dest", destRepoUri], { cwd });
         await exec.exec("git", ["fetch", "dest"], { cwd });
         // if ( !== 0) {
@@ -2470,7 +2470,7 @@ async function deploy(inputs) {
 async function withTmpDir(fn) {
     const tmpDir = createTmpDirSync();
     try {
-        return fn(tmpDir);
+        return await fn(tmpDir);
     }
     finally {
         await io.rmRF(tmpDir);

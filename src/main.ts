@@ -58,8 +58,8 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
 
   return withTmpDir<void>(async (cwd: string): Promise<void> => {
     await exec.exec("git", ["init"], {cwd});
-    // await exec.exec("git", ["config", "--global", "user.name", "foo"], {cwd});
-    // await exec.exec("git", ["config", "--global", "user.email", "foo@example.com"], {cwd});
+    await exec.exec("git", ["config", "--local", "user.name", "foo"], {cwd});
+    await exec.exec("git", ["config", "--local", "user.email", "foo@example.com"], {cwd});
     await exec.exec("git", ["remote", "add", "dest", destRepoUri], {cwd});
     await exec.exec("git", ["fetch", "dest"], {cwd});
 
@@ -78,7 +78,7 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
 async function withTmpDir<T>(fn: (dirPath: string) => Promise<T>): Promise<T> {
   const tmpDir: string = createTmpDirSync();
   try {
-    return fn(tmpDir);
+    return await fn(tmpDir);
   } finally {
     await io.rmRF(tmpDir);
   }
