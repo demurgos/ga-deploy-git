@@ -2402,28 +2402,32 @@ module.exports = require("child_process");
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = __importDefault(__webpack_require__(470));
-const exec_1 = __importDefault(__webpack_require__(986));
-const github_1 = __importDefault(__webpack_require__(469));
-const io_1 = __importDefault(__webpack_require__(1));
-const path_1 = __importDefault(__webpack_require__(622));
-const fs_1 = __importDefault(__webpack_require__(747));
-const os_1 = __importDefault(__webpack_require__(87));
-const crypto_1 = __importDefault(__webpack_require__(417));
+const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
+const github = __importStar(__webpack_require__(469));
+const io = __importStar(__webpack_require__(1));
+const crypto = __importStar(__webpack_require__(417));
+const fs = __importStar(__webpack_require__(747));
+const os = __importStar(__webpack_require__(87));
+const sysPath = __importStar(__webpack_require__(622));
 async function main() {
     const userInputs = getInputs();
     const resolvedinputs = resolveInputs(userInputs);
     await deploy(resolvedinputs);
 }
 function getInputs() {
-    const accessToken = core_1.default.getInput("accessToken", { required: true });
-    const srcBranch = core_1.default.getInput("srcBranch", { required: false });
-    const srcDir = core_1.default.getInput("srcBranch", { required: false });
-    const destBranch = core_1.default.getInput("destBranch", { required: true });
+    const accessToken = core.getInput("accessToken", { required: true });
+    const srcBranch = core.getInput("srcBranch", { required: false });
+    const srcDir = core.getInput("srcBranch", { required: false });
+    const destBranch = core.getInput("destBranch", { required: true });
     return { accessToken, srcBranch, srcDir, destBranch };
 }
 function resolveInputs(inputs) {
@@ -2434,22 +2438,22 @@ function resolveInputs(inputs) {
     else {
         // https://help.github.com/en/articles/events-that-trigger-workflows
         // https://developer.github.com/v3/activity/events/types
-        if (github_1.default.context.eventName === "push") {
-            srcBranch = github_1.default.context.ref;
+        if (github.context.eventName === "push") {
+            srcBranch = github.context.ref;
         }
         else {
-            throw new Error(`Unable to resolve default \`srcBranch\` input for non \`push\` event: ${github_1.default.context.eventName}`);
+            throw new Error(`Unable to resolve default \`srcBranch\` input for non \`push\` event: ${github.context.eventName}`);
         }
     }
     const srcDir = inputs.srcDir !== undefined ? inputs.srcDir : ".";
     return Object.assign(Object.assign({}, inputs), { srcBranch, srcDir });
 }
 async function deploy(inputs) {
-    const destRepoSlug = `${github_1.default.context.repo.owner}/${github_1.default.context.repo.repo}`; // TODO: Allow to configure it
+    const destRepoSlug = `${github.context.repo.owner}/${github.context.repo.repo}`; // TODO: Allow to configure it
     const destRepoUri = `https://${inputs.accessToken}@github.com/${destRepoSlug}.git`;
     return withTmpDir(async (tmpDir) => {
         // Clone dest repository
-        if (await exec_1.default.exec("git", ["clone", destRepoUri, tmpDir]) !== 0) {
+        if (await exec.exec("git", ["clone", destRepoUri, tmpDir]) !== 0) {
             throw new Error(`Failed to clone destination repo: ${destRepoSlug}`);
         }
         console.log("Done");
@@ -2461,20 +2465,20 @@ async function withTmpDir(fn) {
         return fn(tmpDir);
     }
     finally {
-        await io_1.default.rmRF(tmpDir);
+        await io.rmRF(tmpDir);
     }
 }
 function createTmpDirSync() {
     const MAX_TRIES = 5;
-    const tmpRoot = os_1.default.tmpdir();
+    const tmpRoot = os.tmpdir();
     let tryCount = 0;
     while (tryCount < MAX_TRIES) {
         tryCount++;
-        const name = crypto_1.default.randomBytes(8).toString("hex");
-        const tmpDir = path_1.default.join(tmpRoot, name);
+        const name = crypto.randomBytes(8).toString("hex");
+        const tmpDir = sysPath.join(tmpRoot, name);
         try {
-            fs_1.default.mkdirSync(tmpDir);
-            if (fs_1.default.statSync(tmpDir).isDirectory()) {
+            fs.mkdirSync(tmpDir);
+            if (fs.statSync(tmpDir).isDirectory()) {
                 return tmpDir;
             }
         }
@@ -2491,7 +2495,8 @@ function createTmpDirSync() {
         await main();
     }
     catch (e) {
-        core_1.default.setFailed(e.message);
+        console.error(e);
+        core.setFailed(e.message);
     }
 })();
 

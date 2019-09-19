@@ -1,11 +1,11 @@
-import core from "@actions/core";
-import exec from "@actions/exec";
-import github from "@actions/github";
-import io from "@actions/io";
-import sysPath from "path";
-import fs from "fs";
-import os from "os";
-import crypto from "crypto";
+import * as core from "@actions/core";
+import * as exec from "@actions/exec";
+import * as github from "@actions/github";
+import * as io from "@actions/io";
+import * as crypto from "crypto";
+import * as fs from "fs";
+import * as os from "os";
+import * as sysPath from "path";
 
 async function main() {
   const userInputs: Inputs = getInputs();
@@ -100,6 +100,7 @@ function createTmpDirSync(): string {
   try {
     await main();
   } catch (e) {
+    console.error(e);
     core.setFailed(e.message);
   }
 })();
