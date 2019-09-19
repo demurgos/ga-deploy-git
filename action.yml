@@ -13,7 +13,7 @@ inputs:
     required: true
   srcBranch:
     description: "Source branch. Default: branch that triggered the workflow."
-      required: false
+    required: false
   srcDir:
     description: "Directory in the source branch containing the files to deploy. Default: `.`"
     required: false
