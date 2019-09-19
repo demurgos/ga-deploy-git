@@ -23,7 +23,7 @@
       "es2019"
     ],
     "locale": "en-us",
-    "module": "es2015",
+    "module": "commonjs",
     "moduleResolution": "node",
     "newLine": "lf",
     "noEmit": false,
@@ -52,6 +52,11 @@
     "traceResolution": false,
     "typeRoots": [
       "node_modules/@types"
-    ]
-  }
+    ],
+    "rootDir": "src",
+    "outDir": "build"
+  },
+  "include": [
+    "**/*.ts"
+  ]
 }
