@@ -56,11 +56,21 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
   const destRepoSlug: string = `${github.context.repo.owner}/${github.context.repo.repo}`; // TODO: Allow to configure it
   const destRepoUri: string = `https://${inputs.accessToken}@github.com/${destRepoSlug}.git`;
 
-  return withTmpDir<void>(async (tmpDir: string): Promise<void> => {
+  return withTmpDir<void>(async (cwd: string): Promise<void> => {
+    await exec.exec("git", ["init"], {cwd});
+    await exec.exec("git", ["config", "user.name", "foo"], {cwd});
+    await exec.exec("git", ["config", "user.email", "foo@example.com"], {cwd});
+    await exec.exec("git", ["remote", "add", "dest", destRepoUri], {cwd});
+    await exec.exec("git", ["fetch", "dest"], {cwd});
+
+    // if ( !== 0) {
+    //   throw new Error(`Failed to clone destination repo: ${destRepoSlug}`);
+    // }
+
     // Clone dest repository
-    if (await exec.exec("git", ["clone", destRepoUri, tmpDir]) !== 0) {
-      throw new Error(`Failed to clone destination repo: ${destRepoSlug}`);
-    }
+    // if (await exec.exec("git", ["clone", destRepoUri, tmpDir]) !== 0) {
+    //   throw new Error(`Failed to clone destination repo: ${destRepoSlug}`);
+    // }
     console.log("Done");
   });
 }
@@ -100,7 +110,6 @@ function createTmpDirSync(): string {
   try {
     await main();
   } catch (e) {
-    console.error(e);
     core.setFailed(e.message);
   }
 })();
