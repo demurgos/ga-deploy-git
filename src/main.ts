@@ -60,6 +60,8 @@ function isDefined(optStr: string | undefined): optStr is string {
 }
 
 async function deploy(inputs: ResolvedInputs): Promise<void> {
+  core.debug(JSON.stringify(inputs));
+
   const destRepoUri: string = `https://${inputs.accessToken}@github.com/${inputs.destRepo}.git`;
 
   return withTmpDir<void>(async (cwd: string): Promise<void> => {
