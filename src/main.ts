@@ -75,22 +75,43 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
           throw new Error("Failed to check existence of `destBranch` in destination repository");
       }
     }
+    let isNewBranch: boolean;
     if (destBranchExists) {
       core.info(`Checking destination branch: ${inputs.destBranch}`);
       await exec.exec("git", ["checkout", "-t", `dest/${inputs.destBranch}`], {cwd});
+      isNewBranch = false;
     } else {
       core.info(`Creating destination branch (not found in destination repo): ${inputs.destBranch}`);
       await exec.exec("git", ["checkout", "--orphan", inputs.destBranch], {cwd});
+      isNewBranch = true;
     }
+
     core.info(`Setting destination content from source directory: ${inputs.srcDir}`);
     await rmAllExceptDotGit(cwd);
-    await copyAllExceptDotGit(inputs.srcDir, cwd);
-    core.info("Creating deployment commit");
+    const isNonEmpty: boolean = await copyAllExceptDotGit(inputs.srcDir, cwd);
     await exec.exec("git", ["add", "."], {cwd});
-    const msg: string = `Deploy commit: ${github.context.sha}`;
-    await exec.exec("git", ["commit", "-m", msg], {cwd});
-    core.info("Deploying");
-    await exec.exec("git", ["push", "dest", inputs.destBranch], {cwd});
+
+    let hasChanges: boolean;
+    if (isNewBranch) {
+      hasChanges = isNonEmpty;
+    } else {
+      const exitCode: number = await exec.exec(
+        "git",
+        ["diff-index", "--quiet", "HEAD", "--"],
+        {cwd, ignoreReturnCode: true},
+      );
+      hasChanges = exitCode != 0;
+    }
+
+    if (hasChanges) {
+      core.info("Creating deployment commit");
+      const msg: string = `Deploy commit: ${github.context.sha}`;
+      await exec.exec("git", ["commit", "-m", msg], {cwd});
+      core.info("Deploying");
+      await exec.exec("git", ["push", "dest", inputs.destBranch], {cwd});
+    } else {
+      core.info("Skipping deployment: no changes detected");
+    }
   });
 }
 
@@ -137,16 +158,19 @@ async function rmAllExceptDotGit(dir: string): Promise<void> {
   await Promise.all(rmPromises);
 }
 
-async function copyAllExceptDotGit(srcDir: string, destDir: string): Promise<void> {
+async function copyAllExceptDotGit(srcDir: string, destDir: string): Promise<boolean> {
+  let didCopySomething: boolean = false;
   const fileNames: string[] = fs.readdirSync(srcDir);
   const cpPromises: Promise<void>[] = [];
   for (const fileName of fileNames) {
     if (fileName === ".git") {
       continue;
     }
+    didCopySomething = true;
     cpPromises.push(io.cp(sysPath.join(srcDir, fileName), sysPath.join(destDir, fileName)));
   }
   await Promise.all(cpPromises);
+  return didCopySomething;
 }
 
 (async () => {
