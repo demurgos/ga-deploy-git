@@ -15,46 +15,36 @@ async function main() {
 
 interface Inputs {
   accessToken: string;
-  srcBranch: string | undefined;
   srcDir: string | undefined;
+  destRepo: string | undefined;
   destBranch: string;
 }
 
 function getInputs(): Inputs {
   const accessToken: string = core.getInput("accessToken", {required: true});
-  const srcBranch: string | undefined = core.getInput("srcBranch", {required: false});
   const srcDir: string | undefined = core.getInput("srcDir", {required: false});
+  const destRepo: string | undefined = core.getInput("destRepo", {required: false});
   const destBranch: string = core.getInput("destBranch", {required: true});
-  return {accessToken, srcBranch, srcDir, destBranch};
+  return {accessToken, srcDir, destRepo, destBranch};
 }
 
 interface ResolvedInputs {
   accessToken: string;
-  srcBranch: string;
   srcDir: string;
+  destRepo: string;
   destBranch: string;
 }
 
 function resolveInputs(inputs: Inputs): ResolvedInputs {
-  let srcBranch: string;
-  if (inputs.srcBranch !== undefined) {
-    srcBranch = inputs.srcBranch;
-  } else {
-    // https://help.github.com/en/articles/events-that-trigger-workflows
-    // https://developer.github.com/v3/activity/events/types
-    if (github.context.eventName === "push") {
-      srcBranch = github.context.ref;
-    } else {
-      throw new Error(`Unable to resolve default \`srcBranch\` input for non \`push\` event: ${github.context.eventName}`);
-    }
-  }
+  let destRepo: string = inputs.destRepo !== undefined
+    ? inputs.destRepo
+    : `${github.context.repo.owner}/${github.context.repo.repo}`;
   const srcDir: string = inputs.srcDir !== undefined ? inputs.srcDir : ".";
-  return {...inputs, srcBranch, srcDir};
+  return {...inputs, srcDir, destRepo};
 }
 
 async function deploy(inputs: ResolvedInputs): Promise<void> {
-  const destRepoSlug: string = `${github.context.repo.owner}/${github.context.repo.repo}`; // TODO: Allow to configure it
-  const destRepoUri: string = `https://${inputs.accessToken}@github.com/${destRepoSlug}.git`;
+  const destRepoUri: string = `https://${inputs.accessToken}@github.com/${inputs.destRepo}.git`;
 
   return withTmpDir<void>(async (cwd: string): Promise<void> => {
     core.info("Initializing destination repository");
@@ -115,7 +105,7 @@ async function withTmpDir<T>(fn: (dirPath: string) => Promise<T>): Promise<T> {
 
 function createTmpDirSync(): string {
   const MAX_TRIES: number = 5;
-  const tmpRoot: string = os.homedir(); // os.tmpdir();
+  const tmpRoot: string = os.tmpdir();
   let tryCount: number = 0;
   while (tryCount < MAX_TRIES) {
     tryCount++;
