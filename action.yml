@@ -1,4 +1,4 @@
-name: "deploy-git"
+name: "ga-deploy-git"
 description: "Deploy a project using Git"
 author: "Demurgos"
 branding:
