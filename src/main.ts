@@ -98,14 +98,29 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
       const exitCode: number = await exec.exec(
         "git",
         ["diff-index", "--quiet", "HEAD", "--"],
-        {cwd, ignoreReturnCode: true},
+        {cwd, ignoreReturnCode: true, silent: true},
       );
       hasChanges = exitCode != 0;
     }
 
     if (hasChanges) {
       core.info("Creating deployment commit");
-      const msg: string = `Deploy commit: ${github.context.sha}`;
+      const sha: string = github.context.sha;
+      const commitTitle: string = await getCommitTitle(sha);
+      const shortSha: string = sha.substr(0, 7);
+      const ref: string = github.context.ref;
+      const msgLines: ReadonlyArray<string> = [
+        `Deploy(${ref}@${shortSha}): ${commitTitle}`,
+        "",
+        `Repo: ${github.context.repo.owner}/${github.context.repo.repo}`,
+        `Workflow: ${github.context.workflow}`,
+        `SHA: ${sha}`,
+        `Ref: ${ref}`,
+        `Actor: ${github.context.actor}`,
+        "",
+      ];
+
+      const msg: string = msgLines.join("\n");
       await exec.exec("git", ["commit", "-m", msg], {cwd});
       core.info("Deploying");
       await exec.exec("git", ["push", "dest", inputs.destBranch], {cwd});
@@ -113,6 +128,17 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
       core.info("Skipping deployment: no changes detected");
     }
   });
+}
+
+async function getCommitTitle(sha: string): Promise<string> {
+  const chunks: Uint8Array[] = [];
+  await exec.exec(
+    "git",
+    ["log", "--format=%B", "-n", "1", sha],
+    {silent: true, listeners: {stdout: data => chunks.push(data)}},
+  );
+  const message: string = Buffer.concat(chunks).toString("utf8");
+  return message.split("\n")[0].trim();
 }
 
 async function withTmpDir<T>(fn: (dirPath: string) => Promise<T>): Promise<T> {
