@@ -7,20 +7,26 @@ branding:
 inputs:
   accessToken:
     description: |
-      Personal access token with. The token requires the `public_repo` scope
-      (read/write access to public repositories of the user).
+      Personal access token with read/write access to the repo (`public_repo` or
+      `repo scope` depending on the visibility of the repo).
       See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
     required: true
-  srcBranch:
-    description: "Source branch. Default: branch that triggered the workflow."
-    required: false
   srcDir:
     description: "Directory in the source branch containing the files to deploy. Default: `.`"
     required: false
     default: "."
+  destRepo:
+    description: "Destination repo slug in the form `userOrOrganization/repoName`. Default: repo that triggered the workflow."
+    required: false
   destBranch:
     description: "Destination branch: the files will be deployed at its root."
     required: true
+  commitUser:
+    description: "Git `user.name` value for the deployment commit. Default: login of the user that triggered the workflow."
+    required: false
+  commitEmail:
+    description: "Git `user.email` value for the deployment commit. Default: `<userLogin>@users.noreply.github.com`."
+    required: false
 
 runs:
   using: "node12"
