@@ -12,15 +12,21 @@ inputs:
       See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
     required: true
   srcDir:
-    description: "Directory in the source branch containing the files to deploy. Default: `\".\"`"
+    description: "Directory in the source branch containing the files to deploy. Default: `.`"
     required: false
     default: "."
   destRepo:
-    description: "Destination repo slug in the form `\"userOrOrganization/repoName\"`. Default: repo that triggered the workflow."
+    description: "Destination repo slug in the form `userOrOrganization/repoName`. Default: repo that triggered the workflow."
     required: false
   destBranch:
     description: "Destination branch: the files will be deployed at its root."
     required: true
+  commitUser:
+    description: "Git `user.name` value for the deployment commit. Default: login of the user that triggered the workflow."
+    required: false
+  commitEmail:
+    description: "Git `user.email` value for the deployment commit. Default: `<userLogin>@users.noreply.github.com`."
+    required: false
 
 runs:
   using: "node12"

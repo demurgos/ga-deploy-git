@@ -42,6 +42,18 @@ Default: repo that triggered the workflow.
 
 Destination branch: the files will be deployed at its root.
 
+### `commitUser`
+
+Git `user.name` value for the deployment commit.
+
+Default: login of the user that triggered the workflow.
+
+### `commitEmail`
+
+Git `user.email` value for the deployment commit.
+
+Default: `<userLogin>@users.noreply.github.com`.
+
 ## Example
 
 This library was developed to support deploying a website build to GitHub Pages.

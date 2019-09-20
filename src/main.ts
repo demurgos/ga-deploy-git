@@ -18,6 +18,8 @@ interface Inputs {
   srcDir: string | undefined;
   destRepo: string | undefined;
   destBranch: string;
+  commitUser: string | undefined;
+  commitEmail: string | undefined;
 }
 
 function getInputs(): Inputs {
@@ -25,7 +27,9 @@ function getInputs(): Inputs {
   const srcDir: string | undefined = core.getInput("srcDir", {required: false});
   const destRepo: string | undefined = core.getInput("destRepo", {required: false});
   const destBranch: string = core.getInput("destBranch", {required: true});
-  return {accessToken, srcDir, destRepo, destBranch};
+  const commitUser: string | undefined = core.getInput("commitUser", {required: false});
+  const commitEmail: string | undefined = core.getInput("commitEmail", {required: false});
+  return {accessToken, srcDir, destRepo, destBranch, commitUser, commitEmail};
 }
 
 interface ResolvedInputs {
@@ -33,14 +37,26 @@ interface ResolvedInputs {
   srcDir: string;
   destRepo: string;
   destBranch: string;
+  commitUser: string;
+  commitEmail: string;
 }
 
 function resolveInputs(inputs: Inputs): ResolvedInputs {
-  let destRepo: string = inputs.destRepo !== undefined
+  let destRepo: string = isDefined(inputs.destRepo)
     ? inputs.destRepo
     : `${github.context.repo.owner}/${github.context.repo.repo}`;
-  const srcDir: string = inputs.srcDir !== undefined ? inputs.srcDir : ".";
-  return {...inputs, srcDir, destRepo};
+  const srcDir: string = isDefined(inputs.srcDir) ? inputs.srcDir : ".";
+  const commitUser: string = isDefined(inputs.commitUser)
+    ? inputs.commitUser
+    : github.context.actor;
+  const commitEmail: string = isDefined(inputs.commitEmail)
+    ? inputs.commitEmail
+    : `${github.context.actor}@users.noreply.github.com`;
+  return {...inputs, srcDir, destRepo, commitUser, commitEmail};
+}
+
+function isDefined(optStr: string | undefined): optStr is string {
+  return optStr !== undefined && optStr.length > 0;
 }
 
 async function deploy(inputs: ResolvedInputs): Promise<void> {
@@ -50,8 +66,8 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
     core.info("Initializing destination repository");
 
     await exec.exec("git", ["init"], {cwd});
-    await exec.exec("git", ["config", "--local", "user.name", "foo"], {cwd});
-    await exec.exec("git", ["config", "--local", "user.email", "foo@example.com"], {cwd});
+    await exec.exec("git", ["config", "--local", "user.name", inputs.commitUser], {cwd});
+    await exec.exec("git", ["config", "--local", "user.email", inputs.commitEmail], {cwd});
     await exec.exec("git", ["remote", "add", "dest", destRepoUri], {cwd});
     await exec.exec("git", ["fetch", "dest"], {cwd});
 
@@ -108,14 +124,13 @@ async function deploy(inputs: ResolvedInputs): Promise<void> {
       const sha: string = github.context.sha;
       const commitTitle: string = await getCommitTitle(sha);
       const shortSha: string = sha.substr(0, 7);
-      const ref: string = github.context.ref;
       const msgLines: ReadonlyArray<string> = [
-        `Deploy(${ref}@${shortSha}): ${commitTitle}`,
+        `Deploy(${shortSha}): ${commitTitle}`,
         "",
         `Repo: ${github.context.repo.owner}/${github.context.repo.repo}`,
         `Workflow: ${github.context.workflow}`,
         `SHA: ${sha}`,
-        `Ref: ${ref}`,
+        `Ref: ${github.context.ref}`,
         `Actor: ${github.context.actor}`,
         "",
       ];
