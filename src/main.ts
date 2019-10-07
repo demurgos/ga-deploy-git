@@ -210,7 +210,7 @@ async function copyAllExceptDotGit(srcDir: string, destDir: string): Promise<boo
       continue;
     }
     didCopySomething = true;
-    cpPromises.push(io.cp(sysPath.join(srcDir, fileName), sysPath.join(destDir, fileName)));
+    cpPromises.push(io.cp(sysPath.join(srcDir, fileName), sysPath.join(destDir, fileName), {recursive: true}));
   }
   await Promise.all(cpPromises);
   return didCopySomething;
