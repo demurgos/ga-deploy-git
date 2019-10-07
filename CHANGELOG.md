@@ -1,4 +1,4 @@
-# Next
+# 1.0.2 (2019-10-07)
 
 - **[Fix]** Add support for directories.
 
